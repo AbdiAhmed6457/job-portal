@@ -28,7 +28,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -38,10 +37,38 @@ export const loginUser = async (req, res) => {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ message: "Invalid email or password" });
 
-    const accessToken = generateToken(user); // use util
-    res.json({ message: "Login successful", accessToken });
+    const accessToken = generateToken(user);
+
+    res.json({
+      message: "Login successful",
+      accessToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// export const loginUser = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     const user = await User.findOne({ where: { email } });
+//     if (!user) return res.status(401).json({ message: "Invalid email or password" });
+
+//     const valid = await bcrypt.compare(password, user.passwordHash);
+//     if (!valid) return res.status(401).json({ message: "Invalid email or password" });
+
+//     const accessToken = generateToken(user); // use util
+//     res.json({ message: "Login successful", accessToken });
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
