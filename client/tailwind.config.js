@@ -14,7 +14,10 @@ export default {
         secondary: { DEFAULT: "#2260A6", light: "#3A7AC2", dark: "#1A4C82" },
         accent: { orange: "#E86C1A" },
         // Optional: tiny golden sparkle (used only once)
-        gold: "#FFD700",
+         gold: {
+        400: "#D4AF37",
+        500: "#C59D2D",
+      },
       },
     },
   },

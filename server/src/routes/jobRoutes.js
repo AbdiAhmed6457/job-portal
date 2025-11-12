@@ -1,14 +1,21 @@
+import { authenticate } from "../middlewares/authenticate.js";
 import express from "express";
-import { createJob, updateJob, getJobs } from "../controllers/jobController.js";
-import { authenticate, authorizeRoles } from "../middlewares/authenticate.js";
+import {
+  createJob,
+  updateJob,
+  getJobs,
+getJobById,
+} from "../controllers/jobController.js";
 
 const router = express.Router();
 
-// Recruiter actions
-router.post("/", authenticate, authorizeRoles("recruiter"), createJob);
-router.put("/:id", authenticate, authorizeRoles("recruiter"), updateJob);
-
-// Public actions
+// Public route to get jobs (with pagination + filters)
 router.get("/", getJobs);
+router.get("/:id", getJobById);
+
+
+// Recruiter routes
+router.post("/", authenticate, createJob);
+router.put("/:id", authenticate, updateJob);
 
 export default router;

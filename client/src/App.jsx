@@ -2,10 +2,23 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
+
+// Pages
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import JobDetail from "./pages/JobDetail";
+
+// Components
 import Navbar from "./component/Navbar";
-import Home from "./pages/Home";
+import Footer from "./component/Footer";
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user } = React.useContext(AuthContext);
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
 
 function App() {
   return (
@@ -17,40 +30,52 @@ function App() {
   );
 }
 
-// AppContent pulls user and logout from AuthContext
 const AppContent = () => {
   const { user, logout } = React.useContext(AuthContext);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
+      {/* Sticky Navbar */}
       <Navbar user={user} onLogout={logout} />
-      <div className="pt-20">
+
+      {/* Main Content */}
+      <main className="flex-grow pt-20">
         <Routes>
-          {/* 🟢 Public routes */}
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/job/:id" element={<JobDetail />} />
 
-          {/* 🔒 Example protected route (add more as needed) */}
+
+          {/* Example Protected Route */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="p-6 text-center text-lg">Welcome to your Dashboard</div>
+                <div className="p-6 text-center text-lg">
+                  Welcome to your Dashboard
+                </div>
               </ProtectedRoute>
             }
           />
-        </Routes>
-      </div>
-    </>
-  );
-};
 
-// Protects routes that require authentication
-const ProtectedRoute = ({ children }) => {
-  const { user } = React.useContext(AuthContext);
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
+          {/* 404 fallback */}
+          <Route
+            path="*"
+            element={
+              <div className="text-center p-10 text-red-500">
+                404 | Page Not Found
+              </div>
+            }
+          />
+        </Routes>
+      </main>
+
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
 };
 
 export default App;

@@ -19,7 +19,7 @@ router.put("/companies/:id/status", authenticate, authorizeRoles("admin"), updat
 // Jobs
 router.get("/jobs/pending", authenticate, authorizeRoles("admin"), getPendingJobs);
 router.put("/jobs/:id/status", authenticate, authorizeRoles("admin"), updateJobStatus);
-router.get("/jobs/stats", authenticate, authorizeRoles("admin"), getJobStats);
+router.get("/jobs/status", authenticate, authorizeRoles("admin"), getJobStats);
 
 // Applications
 router.get("/applications", authenticate, authorizeRoles("admin"), getAllApplications);

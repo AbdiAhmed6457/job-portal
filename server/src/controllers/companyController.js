@@ -11,8 +11,6 @@ export const createCompany = async (req, res) => {
   try {
     const { name, logoUrl, location, recruiterId: recruiterIdFromBody } = req.body;
 
-    // Determine recruiterId: if admin creates company, recruiterId can come from body;
-    // if recruiter creates their own company, use req.user.id
     const recruiterId = req.user.role === "admin" ? recruiterIdFromBody : req.user.id;
 
     if (!recruiterId) {
@@ -24,7 +22,6 @@ export const createCompany = async (req, res) => {
       return res.status(400).json({ message: "Invalid recruiter" });
     }
 
-    // Prevent duplicate company for same recruiter
     const existingCompany = await Company.findOne({
       where: { recruiterUserId: recruiterId },
     });
@@ -39,7 +36,7 @@ export const createCompany = async (req, res) => {
       logoUrl: logoUrl || null,
       location: location || null,
       recruiterUserId: recruiterId,
-      status: "pending", // always pending until admin approval
+      status: "pending",
     });
 
     res.status(201).json({
@@ -74,7 +71,7 @@ export const getCompanies = async (req, res) => {
 export const updateCompanyStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // approved / rejected / revoked
+    const { status } = req.body;
 
     if (!["approved", "rejected", "revoked"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
@@ -85,7 +82,6 @@ export const updateCompanyStatus = async (req, res) => {
 
     await company.update({ status });
 
-    // If rejected or revoked, mark all associated jobs as revoked
     if (["rejected", "revoked"].includes(status)) {
       await Job.update(
         { status: "revoked" },
@@ -101,6 +97,35 @@ export const updateCompanyStatus = async (req, res) => {
     res.json({ message: `Company ${status} successfully`, company });
   } catch (err) {
     console.error("❌ updateCompanyStatus error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* =========================
+   Recruiter/Admin: Update Company Profile
+========================= */
+export const updateCompanyProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, logoUrl, location } = req.body;
+
+    const company = await Company.findByPk(id);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    // Only the admin or the recruiter who owns the company can update
+    if (req.user.role !== "admin" && req.user.id !== company.recruiterUserId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    await company.update({
+      name: name !== undefined ? name : company.name,
+      logoUrl: logoUrl !== undefined ? logoUrl : company.logoUrl,
+      location: location !== undefined ? location : company.location,
+    });
+
+    res.json({ message: "Company profile updated successfully", company });
+  } catch (err) {
+    console.error("❌ updateCompanyProfile error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
