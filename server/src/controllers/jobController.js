@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import Job from "../models/Job.js";
 import Company from "../models/Company.js";
+import AuditLog from "../models/AuditLog.js";
 
 /* =========================
    Recruiter: Create Job
@@ -150,3 +151,79 @@ export const getJobById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/* =========================
+   Recruiter: Get My Jobs
+========================= */
+export const getMyJobs = async (req, res) => {
+  try {
+    const company = await Company.findOne({
+      where: { recruiterUserId: req.user.id },
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "You don't have a company yet" });
+    }
+
+    const jobs = await Job.findAll({
+      where: { companyId: company.id },
+      include: [
+        {
+          model: Company,
+          attributes: ["id", "name", "logoUrl", "status"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({ count: jobs.length, jobs });
+  } catch (err) {
+    console.error("❌ getMyJobs error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+/**
+ * Delete a job (soft delete) with audit logging
+ * Only admin or the recruiter who owns the job can delete it
+ */
+export const deleteJob = async (req, res) => {
+  try {
+    const jobId = parseInt(req.params.id, 10);
+    if (isNaN(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
+    }
+
+    // Find job with company info
+    const job = await Job.findByPk(jobId, { include: Company });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Access control
+    if (req.user.role === "recruiter" && job.Company.recruiterUserId !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized to delete this job" });
+    }
+
+    // Soft delete
+    await job.update({ status: "deleted" });
+
+    // Audit log (optional but professional)
+    await AuditLog.create({
+      action: "delete",
+      entity: "job",
+      entityId: job.id,
+      performedBy: req.user.id,
+      performedAt: new Date(),
+      details: `Job "${job.title}" deleted by ${req.user.role}`
+    });
+
+    return res.status(200).json({ message: "Job deleted successfully" });
+  } catch (err) {
+    console.error("❌ deleteJob error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+

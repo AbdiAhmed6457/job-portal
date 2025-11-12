@@ -3,14 +3,15 @@ import {
   createCompany, 
   getCompanies, 
   updateCompanyStatus,
-  updateCompanyProfile
+  updateCompanyProfile,
+  getMyCompany
 } from "../controllers/companyController.js";
 
 import { authenticate, authorizeRoles } from "../middlewares/authenticate.js";
 
 const router = express.Router();
 
-// Recruiter or Admin creates a company
+// Recruiter/Admin creates a company
 router.post("/", authenticate, authorizeRoles("recruiter", "admin"), createCompany);
 
 // Admin gets all companies
@@ -21,5 +22,8 @@ router.put("/:id/status", authenticate, authorizeRoles("admin"), updateCompanySt
 
 // Recruiter/Admin updates company profile
 router.put("/:id", authenticate, authorizeRoles("recruiter", "admin"), updateCompanyProfile);
+
+// Recruiter gets their own company info
+router.get("/mine", authenticate, authorizeRoles("recruiter"), getMyCompany);
 
 export default router;

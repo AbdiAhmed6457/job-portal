@@ -129,3 +129,40 @@ export const updateCompanyProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* =========================
+   Recruiter: Get My Company
+========================= */
+// export const getMyCompany = async (req, res) => {
+//   try {
+//     const company = await Company.findOne({
+//       where: { recruiterUserId: req.user.id },
+//       include: [{ model: User, attributes: ["id", "name", "email", "role"] }],
+//     });
+
+//     if (!company) {
+//       return res.status(404).json({ message: "You have not created a company yet" });
+//     }
+
+//     res.status(200).json({ company });
+//   } catch (err) {
+//     console.error("❌ getMyCompany error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+export const getMyCompany = async (req, res) => {
+  try {
+    // req.user is set by authenticate middleware
+    const company = await Company.findOne({ where: { recruiterUserId: req.user.id } });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.status(200).json({ company });
+  } catch (err) {
+    console.error("❌ getMyCompany error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
