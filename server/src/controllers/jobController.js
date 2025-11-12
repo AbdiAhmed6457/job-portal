@@ -10,6 +10,9 @@ export const createJob = async (req, res) => {
     const { title, description, requirements, gpaMin, location, expiresAt } = req.body;
 
     const company = await Company.findOne({ where: { recruiterUserId: req.user.id } });
+
+  
+
     if (!company) return res.status(404).json({ message: "Company not found" });
     if (company.status !== "approved")
       return res.status(403).json({ message: "Company is not approved to post jobs" });
