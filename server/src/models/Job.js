@@ -6,7 +6,7 @@ import Company from "./Company.js";
 const Job = sequelize.define("Job", {
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false },
-  requirements: { type: DataTypes.TEXT },
+  requirements: { type: DataTypes.JSON },
   gpaMin: { type: DataTypes.FLOAT },
   location: { type: DataTypes.STRING }, // optional field
   expiresAt: { type: DataTypes.DATE, allowNull: false },

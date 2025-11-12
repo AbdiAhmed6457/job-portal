@@ -1,34 +1,24 @@
-// src/components/JobCard.jsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, MapPin, Building2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// client/src/components/JobCard.jsx
+import React from "react";
+import { Link } from "react-router-dom";
 
 const JobCard = ({ job }) => {
-  const navigate = useNavigate();
-
   return (
-    <Card
-      onClick={() => navigate(`/jobs/${job.id}`)}
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 border border-gray-200 rounded-2xl"
-    >
-      <CardHeader>
-        <CardTitle className="text-green-700 flex items-center gap-2 text-lg">
-          <Briefcase className="h-5 w-5" /> {job.title}
-        </CardTitle>
-        <p className="text-gray-500 flex items-center gap-2">
-          <Building2 className="h-4 w-4" /> {job.Company?.name || "Unknown Company"}
-        </p>
-      </CardHeader>
-
-      <CardContent className="text-gray-600 text-sm space-y-2">
-        <p className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-green-600" /> {job.location || "Not specified"}
-        </p>
-        <p>
-          <strong>GPA Min:</strong> {job.gpaMin || "N/A"}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="border rounded-lg p-5 shadow-md hover:shadow-lg transition bg-white">
+      <h2 className="text-xl font-bold text-blue-700">{job.title}</h2>
+      <p className="text-gray-600 font-semibold">{job.Company?.name}</p>
+      <p className="text-gray-500">{job.location}</p>
+      <p className="text-gray-400 text-sm mt-2">
+        Expires: {new Date(job.expiresAt).toLocaleDateString()}
+      </p>
+      <p className="mt-2 text-gray-700 line-clamp-3">{job.description}</p>
+      <Link
+        to={`/jobs/${job.id}`}
+        className="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+      >
+        View Details
+      </Link>
+    </div>
   );
 };
 
