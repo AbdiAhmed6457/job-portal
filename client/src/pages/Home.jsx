@@ -8,85 +8,133 @@ const Home = () => {
   const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
+  const [gpa, setGpa] = useState("");
+  const [salary, setSalary] = useState("");
+  const [jobType, setJobType] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch jobs dynamically
+  const categories = ["Engineering", "Accounting", "Design", "Marketing", "Sales"];
+  const jobTypes = ["Remote", "Onsite", "Full-time"];
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const limit = user ? 12 : 6; // less jobs for guests
+        const limit = 12; // always fetch 12 per page
+
         const query = new URLSearchParams({
           status: "approved",
           limit,
           page,
-          search,
-          location,
+          ...(search && { search }),
+          ...(location && { location }),
+          ...(gpa && { gpa }),
+          ...(salary && { salary }),
+          ...(jobType && { jobType }),
+          ...(selectedCategory && { category: selectedCategory }),
         });
 
         const res = await fetch(`http://localhost:5000/api/job?${query}`);
         const data = await res.json();
-        setJobs(data.jobs);
-        setTotalPages(data.totalPages);
+
+        setJobs(data.jobs || []);
+        setTotalPages(data.totalPages || 1);
       } catch (err) {
-        console.error("Error fetching jobs:", err);
+        console.error("❌ Error fetching jobs:", err);
       }
     };
+
     fetchJobs();
-  }, [user, page, search, location]);
+  }, [page, search, location, gpa, salary, jobType, selectedCategory]);
 
   return (
     <div>
-      {/* Landing section */}
-     <section
-  className="relative h-[40vh] flex flex-col items-center justify-center text-center text-white px-4 my-8"
- 
->
-  <h1 className="text-3xl md:text-4xl font-bold text-white animate-fadeIn">
-    MS Job Portal
-  </h1>
-  <p className="text-base md:text-lg text-green-100 max-w-2xl mx-auto mt-3 animate-fadeIn delay-200">
-    Unlock your career potential — Find the right job or hire the best talent.
-  </p>
-  {!user && (
-    <a
-      href="/register"
-      className="bg-white text-green-600 font-semibold px-6 py-3 rounded-lg mt-5 transition-colors hover:bg-green-100 animate-fadeIn delay-400"
-    >
-      Get Started
-    </a>
-  )}
-</section>
-
-
-
-      
-
-      {/* Filter Bar (only for logged-in users) */}
-      {user && (
-        <section className="bg-gray-100 py-6 px-4 flex flex-col sm:flex-row gap-4 justify-center">
-          <input
-            type="text"
-            placeholder="Search by job title"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3"
-          />
-          <input
-            type="text"
-            placeholder="Filter by location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3"
-          />
-          <button
-            onClick={() => setPage(1)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg"
+      {/* Landing Section */}
+      <section className="relative h-[35vh] flex flex-col items-center justify-center text-center text-white px-4 my-8 rounded-xl bg-gradient-to-br from-blue-600 to-green-500 shadow-lg">
+        <h1 className="text-3xl md:text-4xl font-bold">MS Job Portal</h1>
+        <p className="text-base md:text-lg text-green-100 mt-3 max-w-2xl">
+          Unlock your career potential — find the right job or hire top talent.
+        </p>
+        {!user && (
+          <a
+            href="/register"
+            className="bg-white text-green-600 font-semibold px-6 py-3 rounded-full mt-5 hover:bg-green-100 shadow-lg"
           >
-            Apply Filters
+            Get Started
+          </a>
+        )}
+      </section>
+
+      {/* Categories */}
+      <div className="flex gap-3 overflow-x-auto mb-6 px-4">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setSelectedCategory(cat === selectedCategory ? "" : cat);
+              setPage(1);
+            }}
+            className={`px-4 py-2 rounded-full border whitespace-nowrap transition-colors ${
+              selectedCategory === cat
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white border-gray-300 text-gray-700 hover:bg-blue-50"
+            }`}
+          >
+            {cat}
           </button>
-        </section>
-      )}
+        ))}
+      </div>
+
+      {/* Filter Bar */}
+      <section className="bg-gray-100 py-6 px-4 flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+        <input
+          type="text"
+          placeholder="Search by title"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/5"
+        />
+        <input
+          type="text"
+          placeholder="Location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/5"
+        />
+        <input
+          type="number"
+          placeholder="Min GPA"
+          value={gpa}
+          onChange={(e) => setGpa(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/6"
+        />
+        <input
+          type="text"
+          placeholder="Salary (number or scale)"
+          value={salary}
+          onChange={(e) => setSalary(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/6"
+        />
+        <select
+          value={jobType}
+          onChange={(e) => setJobType(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/6"
+        >
+          <option value="">All Job Types</option>
+          {jobTypes.map((jt) => (
+            <option key={jt} value={jt}>
+              {jt}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => setPage(1)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg"
+        >
+          Apply Filters
+        </button>
+      </section>
 
       {/* Job List */}
       <section id="jobs" className="container mx-auto px-4 py-12">
@@ -115,9 +163,7 @@ const Home = () => {
                 Page {page} of {totalPages}
               </span>
               <button
-                onClick={() =>
-                  setPage((prev) => Math.min(prev + 1, totalPages))
-                }
+                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={page === totalPages}
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg disabled:opacity-50"
               >

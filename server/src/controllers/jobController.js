@@ -57,25 +57,27 @@ export const updateJob = async (req, res) => {
   }
 };
 
+
 /* =========================
-   Public: Get Jobs with filters
+   Public: Get Jobs with filters (Fully Backend-Handled)
 ========================= */
+
+
 export const getJobs = async (req, res) => {
   try {
     const {
-      title,
-      companyName,
+      search,
       location,
-      status,
+      status = "approved",
       page = 1,
-      limit = 12, // first page shows 12 jobs
+      limit = 12,
       gpa,
       salary,
       jobType,
       category,
     } = req.query;
 
-    // Expire old jobs
+    // Auto-expire jobs
     await Job.update(
       { status: "expired" },
       {
@@ -88,15 +90,21 @@ export const getJobs = async (req, res) => {
 
     const filters = {};
     if (status) filters.status = status;
-    if (title) filters.title = { [Op.like]: `%${title}%` };
     if (location) filters.location = { [Op.like]: `%${location}%` };
-    if (gpa) filters.gpaMin = { [Op.gte]: parseFloat(gpa) }; // numeric GPA filter
-    if (jobType) filters.jobType = jobType; // exact match
-    if (category) filters.category = category; // exact match
-
-    // Only filter salary if numeric
+    if (gpa) filters.gpaMin = { [Op.gte]: parseFloat(gpa) };
+    if (jobType) filters.jobType = jobType;
+    if (category) filters.category = category;
     if (salary && !isNaN(parseFloat(salary))) {
       filters.salary = { [Op.gte]: parseFloat(salary) };
+    }
+
+    // Search in title, description, and company name
+    if (search) {
+      filters[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
+        { "$Company.name$": { [Op.like]: `%${search}%` } }, // ✅ this line fixes the issue
+      ];
     }
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -107,7 +115,7 @@ export const getJobs = async (req, res) => {
         {
           model: Company,
           attributes: ["id", "name", "logoUrl"],
-          ...(companyName && { where: { name: { [Op.like]: `%${companyName}%` } } }),
+          required: false, // ✅ keeps LEFT JOIN so company always appears
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -117,8 +125,8 @@ export const getJobs = async (req, res) => {
 
     res.json({
       total: jobs.count,
-      page: parseInt(page),
-      pageSize: parseInt(limit),
+      totalPages: Math.ceil(jobs.count / limit),
+      currentPage: parseInt(page),
       jobs: jobs.rows,
     });
   } catch (err) {
@@ -126,6 +134,7 @@ export const getJobs = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 /* =========================
    Public: Get job by ID

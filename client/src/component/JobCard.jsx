@@ -1,7 +1,7 @@
 // client/src/component/JobCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaMapMarkerAlt, FaGraduationCap, FaDollarSign } from "react-icons/fa";
+import { FaMapMarkerAlt, FaGraduationCap, FaMoneyBillWave, FaBriefcase } from "react-icons/fa";
 import dayjs from "dayjs";
 
 const JobCard = ({ job }) => {
@@ -10,17 +10,8 @@ const JobCard = ({ job }) => {
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
 
-  // Safely handle salary display
-  const salaryDisplay = job.salary
-    ? typeof job.salary === "number"
-      ? `$${job.salary.toLocaleString()}`
-      : job.salary // descriptive string like "Company scale"
-    : "Negotiable";
-
   return (
     <div className="bg-white border border-gray-200 shadow-md hover:shadow-xl rounded-2xl p-6 transition transform hover:-translate-y-1 duration-300">
-      
-      {/* Company Logo + Name */}
       <div className="flex items-center mb-3">
         {job.Company?.logoUrl ? (
           <img
@@ -38,18 +29,15 @@ const JobCard = ({ job }) => {
         </p>
       </div>
 
-      {/* Job Title */}
       <h3 className="text-xl font-bold text-blue-700 mb-3 uppercase border-b-2 border-blue-500 pb-1">
         {job.title}
       </h3>
 
-      {/* Location */}
       <p className="flex items-center text-gray-600 mb-2">
         <FaMapMarkerAlt className="mr-2 text-blue-600" />
         {job.location || "Remote"}
       </p>
 
-      {/* GPA Requirement */}
       {job.gpaMin && (
         <p className="flex items-center text-gray-600 mb-2">
           <FaGraduationCap className="mr-2 text-yellow-500" />
@@ -57,25 +45,26 @@ const JobCard = ({ job }) => {
         </p>
       )}
 
-      {/* Salary */}
-      <p className="flex items-center text-gray-600 mb-2">
-        <FaDollarSign className="mr-2 text-green-500" />
-        {salaryDisplay}
-      </p>
-
-      {/* Description */}
-      {job.description && (
-        <p className="text-gray-700 text-sm mb-2">
-          {truncate(job.description, 120)}
+      {job.salary && !isNaN(parseFloat(job.salary)) && (
+        <p className="flex items-center text-gray-600 mb-2">
+          <FaMoneyBillWave className="mr-2 text-green-600" />
+          Salary: ${job.salary}
         </p>
       )}
 
-      {/* Posted Date */}
+      {job.jobType && (
+        <p className="flex items-center text-gray-600 mb-2">
+          <FaBriefcase className="mr-2 text-purple-600" />
+          {job.jobType}
+        </p>
+      )}
+
+      <p className="text-gray-700 text-sm mb-2">{truncate(job.description, 120)}</p>
+
       <p className="text-gray-400 text-xs mb-3">
         Posted {dayjs(job.createdAt).format("MMM D, YYYY")}
       </p>
 
-      {/* View Details Button */}
       <Link
         to={`/job/${job.id}`}
         className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow transition-colors w-full text-center"
