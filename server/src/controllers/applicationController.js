@@ -108,30 +108,30 @@ export const getApplications = async (req, res) => {
     });
 
     // Format response for frontend
-    const detailedApplications = applications.map(app => ({
-      id: app.id,
-      coverLetter: app.coverLetter,
-      cvUrl: app.cvUrl,
-      status: app.status,
-      createdAt: app.createdAt,
-      updatedAt: app.updatedAt,
-      jobId: app.jobId,
-      studentUserId: app.studentUserId,
+    // const detailedApplications = applications.map(app => ({
+    //   id: app.id,
+    //   coverLetter: app.coverLetter,
+    //   cvUrl: app.cvUrl,
+    //   status: app.status,
+    //   createdAt: app.createdAt,
+    //   updatedAt: app.updatedAt,
+    //   jobId: app.jobId,
+    //   studentUserId: app.studentUserId,
 
-      // Mapped values
-      jobTitle: app.Job?.title || "Unknown Job",
-      companyName: app.Job?.Company?.name || "Unknown Company",
-      jobType: app.Job?.jobType || null,
+    //   // Mapped values
+    //   jobTitle: app.Job?.title || "Unknown Job",
+    //   companyName: app.Job?.Company?.name || "Unknown Company",
+    //   jobType: app.Job?.jobType || null,
 
-      // Student info
-      user: {
-        id: app.User?.id,
-        name: app.User?.name,
-        email: app.User?.email,
-      }
-    }));
+    //   // Student info
+    //   user: {
+    //     id: app.User?.id,
+    //     name: app.User?.name,
+    //     email: app.User?.email,
+    //   }
+    // }));
 
-    res.json({ applications: detailedApplications });
+    res.json({ applications });
 
   } catch (err) {
     console.error("getApplications error:", err);
