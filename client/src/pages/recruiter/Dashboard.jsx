@@ -9,7 +9,7 @@ import CompanyCard from "../../component/recruiter/CompanyCard";
 import StatsCard from "../../component/recruiter/StatsCard";
 
 const Dashboard = () => {
-  const { user, token } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
   const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -19,19 +19,19 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch company info
+        // Company info
         const companyRes = await axios.get("/api/company/mine", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCompany(companyRes.data.company || null);
 
-        // Fetch recruiter jobs
+        // Jobs
         const jobsRes = await axios.get("/api/job/myJobs", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setJobs(jobsRes.data.jobs || []);
 
-        // Fetch recruiter applications (latest 5)
+        // Applications (latest 5)
         const appsRes = await axios.get("/api/application/myApplications", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -47,23 +47,21 @@ const Dashboard = () => {
   }, [token]);
 
   if (loading)
-    return (
-      <div className="text-center mt-20 text-gray-500">Loading...</div>
-    );
+    return <div className="text-center mt-20 text-gray-500">Loading...</div>;
 
-  // Stats cards data
+  // Stats cards configuration
   const stats = [
-    { title: "Total Jobs", value: jobs.length, color: "blue", link: "/recruiter/jobs" },
-    { title: "Approved Jobs", value: jobs.filter(j => j.status === "approved").length, color: "green", link: "/recruiter/jobs?status=approved" },
-    { title: "Pending Jobs", value: jobs.filter(j => j.status === "pending").length, color: "yellow", link: "/recruiter/jobs?status=pending" },
-    { title: "Expired Jobs", value: jobs.filter(j => j.status === "expired").length, color: "red", link: "/recruiter/jobs?status=expired" },
-    { title: "Total Applications", value: applications.length, color: "purple", link: "/recruiter/applications" },
-    { title: "New Applications", value: applications.filter(a => a.status === "new").length, color: "pink", link: "/recruiter/applications?status=new" },
+    { title: "Total Jobs", value: jobs.length, color: "blue", onClick: () => navigate("/recruiter/jobs") },
+    { title: "Approved Jobs", value: jobs.filter(j => j.status === "approved").length, color: "green", onClick: () => navigate("/recruiter/jobs?status=approved") },
+    { title: "Pending Jobs", value: jobs.filter(j => j.status === "pending").length, color: "yellow", onClick: () => navigate("/recruiter/jobs?status=pending") },
+    { title: "Expired Jobs", value: jobs.filter(j => j.status === "expired").length, color: "red", onClick: () => navigate("/recruiter/jobs?status=expired") },
+    { title: "Total Applications", value: applications.length, color: "purple", onClick: () => navigate("/recruiter/applications") },
+    { title: "New Applications", value: applications.filter(a => a.status === "new").length, color: "pink", onClick: () => navigate("/recruiter/applications?status=new") },
   ];
 
   return (
     <div className="p-6 space-y-8">
-      {/* --- Top Greeting & Company --- */}
+      {/* Top Greeting & Company */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome back, {company?.name || "Recruiter"}!
@@ -71,88 +69,59 @@ const Dashboard = () => {
         {company ? (
           <CompanyCard company={company} />
         ) : (
-          <a
-            href="/recruiter/create-company"
+          <button
+            onClick={() => navigate("/recruiter/create-company")}
             className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg transition"
           >
             Create Your Company
-          </a>
+          </button>
         )}
       </div>
 
-      {/* --- Stats Cards --- */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        {/* Jobs stats */}
-        <StatsCard
-          title="Total Jobs"
-          value={jobs.length}
-          color="blue"
-          link="/recruiter/jobs"
-        />
-        <StatsCard
-          title="Approved Jobs"
-          value={jobs.filter(j => j.status === "approved").length}
-          color="green"
-          link="/recruiter/jobs?status=approved"
-        />
-        <StatsCard
-          title="Pending Jobs"
-          value={jobs.filter(j => j.status === "pending").length}
-          color="yellow"
-          link="/recruiter/jobs?status=pending"
-        />
-        <StatsCard
-          title="Expired Jobs"
-          value={jobs.filter(j => j.status === "expired").length}
-          color="red"
-          link="/recruiter/jobs?status=expired"
-        />
-        {/* Applications stats */}
-        <StatsCard
-          title="Total Applications"
-          value={applications.length}
-          color="purple"
-          link="/recruiter/applications"
-        />
-        <StatsCard
-          title="New Applications"
-          value={applications.filter(a => a.status === "new").length}
-          color="pink"
-          link="/recruiter/applications?status=new"
-        />
+        {stats.map((s, idx) => (
+          <StatsCard
+            key={idx}
+            title={s.title}
+            value={s.value}
+            color={s.color}
+            onClick={s.onClick}
+          />
+        ))}
       </div>
 
-      {/* --- Quick Actions --- */}
+      {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
-        <a
-          href="/recruiter/post-job"
+        <button
+          onClick={() => navigate("/recruiter/post-job")}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg transition"
         >
           Post New Job
-        </a>
-        <a
-          href="/recruiter/jobs"
+        </button>
+        <button
+          onClick={() => navigate("/recruiter/jobs")}
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-3 rounded-lg transition"
         >
           View All Jobs
-        </a>
+        </button>
         {company && (
-          <a
-            href="/recruiter/company"
+          <button
+            onClick={() => navigate("/recruiter/company")}
             className="bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-lg transition"
           >
             Edit Company
-          </a>
+          </button>
         )}
-        <a
-          href="/recruiter/applications"
+        <button
+          onClick={() => navigate("/recruiter/applications")}
           className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-3 rounded-lg transition"
         >
           View Applications
-        </a>
+        </button>
       </div>
 
-      {/* --- Recent Jobs Preview --- */}
+      {/* Recent Jobs Preview */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Recent Jobs</h2>
         {jobs.length === 0 ? (
@@ -165,16 +134,16 @@ const Dashboard = () => {
           </div>
         )}
         {jobs.length > 6 && (
-          <a
-            href="/recruiter/jobs"
-            className="mt-4 inline-block text-blue-600 hover:underline"
+          <button
+            onClick={() => navigate("/recruiter/jobs")}
+            className="mt-4 text-blue-600 hover:underline"
           >
             View All Jobs
-          </a>
+          </button>
         )}
       </div>
 
-      {/* --- Recent Applications Preview --- */}
+      {/* Recent Applications Preview */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Recent Applications</h2>
         {applications.length === 0 ? (
@@ -187,22 +156,26 @@ const Dashboard = () => {
                   <p className="font-semibold">{app.candidateName}</p>
                   <p className="text-sm text-gray-500">{app.jobTitle}</p>
                 </div>
-                <span className={`px-2 py-1 rounded text-white ${
-                  app.status === "new" ? "bg-green-500" :
-                  app.status === "reviewed" ? "bg-blue-500" :
-                  "bg-gray-400"
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-white ${
+                    app.status === "new"
+                      ? "bg-green-500"
+                      : app.status === "reviewed"
+                      ? "bg-blue-500"
+                      : "bg-gray-400"
+                  }`}
+                >
                   {app.status}
                 </span>
               </div>
             ))}
             {applications.length > 5 && (
-              <a
-                href="/recruiter/applications"
-                className="mt-2 inline-block text-blue-600 hover:underline"
+              <button
+                onClick={() => navigate("/recruiter/applications")}
+                className="mt-2 text-blue-600 hover:underline"
               >
                 View All Applications
-              </a>
+              </button>
             )}
           </div>
         )}
