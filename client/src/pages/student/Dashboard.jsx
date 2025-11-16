@@ -10,29 +10,63 @@ import axios from "axios";
 const StudentDashboard = () => {
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
 
+  const [applications, setApplications] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [loadingApps, setLoadingApps] = useState(true);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [filter, setFilter] = useState("all"); // all / accepted / pending / rejected
+
+  // Fetch student applications
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/application", {
+        const res = await axios.get("/api/application", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Filter only student's applications
-        const studentApps = res.data.applications.filter(
-          (app) => app.studentUserId === user.id
-        );
+
+        // Filter only applications of this student
+        const studentApps = res.data.applications.map((app) => ({
+          ...app,
+          jobTitle: app.Job?.title || "Unknown Job",
+          companyName: app.Job?.Company?.name || "Unknown Company",
+        }));
+
         setApplications(studentApps);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch applications error:", err);
       } finally {
-        setLoading(false);
+        setLoadingApps(false);
       }
     };
     fetchApplications();
-  }, [token, user.id]);
+  }, [token]);
 
+  // Fetch all jobs for suggestions
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const res = await axios.get("/api/job", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Only jobs student hasn't applied for
+        const appliedJobIds = applications.map((a) => a.jobId);
+        const suggestedJobs = res.data.jobs.filter(
+          (job) => !appliedJobIds.includes(job.id)
+        );
+        setJobs(suggestedJobs);
+      } catch (err) {
+        console.error("Fetch jobs error:", err);
+      } finally {
+        setLoadingJobs(false);
+      }
+    };
+
+    if (!loadingApps) fetchJobs();
+  }, [applications, token, loadingApps]);
+
+  // Stats
   const stats = {
     total: applications.length,
     accepted: applications.filter((a) => a.status === "accepted").length,
@@ -40,9 +74,11 @@ const StudentDashboard = () => {
     rejected: applications.filter((a) => a.status === "rejected").length,
   };
 
-  const handleViewJob = (jobId) => {
-    navigate(`/job/${jobId}`);
-  };
+  // Filter applications
+  const filteredApps =
+    filter === "all"
+      ? applications
+      : applications.filter((a) => a.status === filter);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -50,24 +86,106 @@ const StudentDashboard = () => {
         Welcome, {user.name}!
       </h1>
 
-      {/* Stats Section */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-        <StatCard title="Total Applied" value={stats.total} color="bg-blue-500" icon={<FaClipboardList />} />
-        <StatCard title="Accepted" value={stats.accepted} color="bg-green-500" icon={<FaCheckCircle />} />
-        <StatCard title="Pending" value={stats.pending} color="bg-yellow-500" icon={<FaClipboardList />} />
-        <StatCard title="Rejected" value={stats.rejected} color="bg-red-500" icon={<FaTimesCircle />} />
+        <StatCard
+          title="Total Applied"
+          value={stats.total}
+          color="bg-blue-500"
+          icon={<FaClipboardList />}
+        />
+        <StatCard
+          title="Accepted"
+          value={stats.accepted}
+          color="bg-green-500"
+          icon={<FaCheckCircle />}
+        />
+        <StatCard
+          title="Pending"
+          value={stats.pending}
+          color="bg-yellow-500"
+          icon={<FaClipboardList />}
+        />
+        <StatCard
+          title="Rejected"
+          value={stats.rejected}
+          color="bg-red-500"
+          icon={<FaTimesCircle />}
+        />
       </div>
 
-      {/* Applications Section */}
-      <div className="space-y-4">
-        {loading ? (
+      {/* Application Filters */}
+      <div className="flex gap-3 mb-6">
+        {["all", "accepted", "pending", "rejected"].map((status) => (
+          <button
+            key={status}
+            className={`px-4 py-2 rounded font-semibold ${
+              filter === status
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800"
+            }`}
+            onClick={() => setFilter(status)}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Applications */}
+      <div className="space-y-4 mb-12">
+        {loadingApps ? (
           <p className="text-center text-blue-600">Loading applications...</p>
-        ) : applications.length === 0 ? (
-          <p className="text-center text-gray-600">You have not applied to any jobs yet.</p>
+        ) : filteredApps.length === 0 ? (
+          <p className="text-center text-gray-600">
+            No applications in this category.
+          </p>
         ) : (
-          applications.map((app) => (
-            <ApplicationCard key={app.id} application={app} onViewJob={handleViewJob} />
+          filteredApps.map((app) => (
+            <ApplicationCard
+              key={app.id}
+              application={app}
+              onViewJob={() => navigate(`/job/${app.jobId}`)}
+            />
           ))
+        )}
+      </div>
+
+      {/* Job Suggestions */}
+      <div>
+        <h2 className="text-2xl font-bold text-green-700 mb-4">
+          Suggested Jobs
+        </h2>
+        {loadingJobs ? (
+          <p className="text-center text-blue-600">Loading suggestions...</p>
+        ) : jobs.length === 0 ? (
+          <p className="text-center text-gray-600">
+            No new job suggestions at the moment.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {jobs.map((job) => (
+              <div
+                key={job.id}
+                className="bg-white shadow-lg rounded p-4 flex flex-col justify-between"
+              >
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
+                  <p className="text-gray-600 mb-2">
+                    Company: {job.Company?.name || "Unknown Company"}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    {job.jobType || "Full-time"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate(`/job/${job.id}`)}
+                  className="mt-4 bg-green-600 text-white font-semibold py-2 rounded hover:bg-green-700 transition"
+                >
+                  View Job
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

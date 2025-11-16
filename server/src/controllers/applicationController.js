@@ -4,6 +4,8 @@ import Job from "../models/Job.js";
 import User from "../models/User.js";
 import path from "path";
 import fs from "fs";
+import Company from "../models/Company.js"; // ✅ Add this
+
 
 export const applyJob = async (req, res) => {
   try {
@@ -41,35 +43,103 @@ export const applyJob = async (req, res) => {
   }
 };
 
+
+
 export const getApplications = async (req, res) => {
   try {
     let where = {};
-    // Student: only own applications
+
+    // -------------------------------
+    // STUDENT: Only his applications
+    // -------------------------------
     if (req.user.role === "student") {
       where.studentUserId = req.user.id;
-    } else if (req.user.role === "recruiter") {
-      // Recruiter: only apps for their jobs
-      const jobs = await Job.findAll({ where: { recruiterUserId: req.user.id }, attributes: ["id"] });
-      const jobIds = jobs.map(j => j.id);
-      where.jobId = jobIds.length ? jobIds : [-1]; // if none, make impossible condition
     }
-    // Admin: no filter (all apps)
 
+    // -------------------------------
+    // RECRUITER: Must fetch his company first
+    // -------------------------------
+    else if (req.user.role === "recruiter") {
+
+      // 1. Get recruiter’s company
+      const recruiterCompany = await Company.findOne({
+        where: { recruiterUserId: req.user.id }, // recruiter owns company
+        attributes: ["id"],
+      });
+
+      if (!recruiterCompany) {
+        return res.json({ applications: [] });
+      }
+
+      // 2. Get all jobs under this company
+      const jobs = await Job.findAll({
+        where: { companyId: recruiterCompany.id },
+        attributes: ["id"],
+      });
+
+      const jobIds = jobs.map(j => j.id);
+
+      // If recruiter has no jobs → return empty
+      where.jobId = jobIds.length ? jobIds : [-1];
+    }
+
+    // ---------------------------------
+    // ADMIN: sees everything (no filter)
+    // ---------------------------------
+
+
+    // Fetch applications
     const applications = await Application.findAll({
       where,
       include: [
-        { model: Job, attributes: ["id", "title", "companyId", "jobType"] },
-        { model: User, attributes: ["id", "name", "email"] },
+        {
+          model: Job,
+          attributes: ["id", "title", "companyId", "jobType"],
+          include: [
+            { model: Company, attributes: ["id", "name"] }
+          ]
+        },
+        {
+          model: User,
+          attributes: ["id", "name", "email"]
+        }
       ],
       order: [["createdAt", "DESC"]],
     });
 
-    res.json({ applications });
+    // Format response for frontend
+    const detailedApplications = applications.map(app => ({
+      id: app.id,
+      coverLetter: app.coverLetter,
+      cvUrl: app.cvUrl,
+      status: app.status,
+      createdAt: app.createdAt,
+      updatedAt: app.updatedAt,
+      jobId: app.jobId,
+      studentUserId: app.studentUserId,
+
+      // Mapped values
+      jobTitle: app.Job?.title || "Unknown Job",
+      companyName: app.Job?.Company?.name || "Unknown Company",
+      jobType: app.Job?.jobType || null,
+
+      // Student info
+      user: {
+        id: app.User?.id,
+        name: app.User?.name,
+        email: app.User?.email,
+      }
+    }));
+
+    res.json({ applications: detailedApplications });
+
   } catch (err) {
     console.error("getApplications error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 export const updateApplicationStatus = async (req, res) => {
   try {

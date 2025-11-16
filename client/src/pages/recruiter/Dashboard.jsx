@@ -32,7 +32,7 @@ const Dashboard = () => {
         setJobs(jobsRes.data.jobs || []);
 
         // Fetch recruiter applications (latest 5)
-        const appsRes = await axios.get("/api/application/myApplications", {
+        const appsRes = await axios.get("/api/application", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setApplications(appsRes.data.applications || []);
