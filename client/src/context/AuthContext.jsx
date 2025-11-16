@@ -7,17 +7,32 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
 
-  const register = async (name, email, password, role) => {
-    const res = await fetch("http://localhost:5000/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
-    });
+  // Register + auto-login
+const register = async (name, email, password, role) => {
+  const res = await fetch("http://localhost:5000/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, role }),
+  });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
-    return data;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+
+  // Store token + user
+  localStorage.setItem("token", data.accessToken);
+  const userData = {
+    email: data.user.email,
+    role: data.user.role,
+    name: data.user.name,
   };
+  localStorage.setItem("user", JSON.stringify(userData));
+
+  setToken(data.accessToken);
+  setUser(userData);
+
+  return data;
+};
+
 
   const login = async (email, password) => {
     const res = await fetch("http://localhost:5000/api/auth/login", {
@@ -27,10 +42,10 @@ export const AuthProvider = ({ children }) => {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
+    if (!res.ok) throw new Error(data.message || "Login failed");
 
-    // ✅ store both email + role
     const userData = {
+      id: data.user?.id,
       email: data.user?.email,
       role: data.user?.role,
       name: data.user?.name,
@@ -40,7 +55,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setToken(data.accessToken);
     setUser(userData);
-    return data;
+
+    return { user: userData, accessToken: data.accessToken };
   };
 
   const logout = () => {
@@ -48,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
-    window.location.href = "/login"; // redirect to login page
+    window.location.href = "/login"; // force redirect
   };
 
   return (

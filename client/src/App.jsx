@@ -8,7 +8,10 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import JobDetail from "./pages/JobDetail";
-
+import CreateCompany from "./pages/recruiter/CreateCompany";
+import Dashboard from "./pages/recruiter/Dashboard";
+import DashboardRedirect from "./component/DashboardRedirect";
+import PostJob from "./pages/recruiter/PostJob";
 // Components
 import Navbar from "./component/Navbar";
 import Footer from "./component/Footer";
@@ -46,6 +49,9 @@ const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/job/:id" element={<JobDetail />} />
+          <Route path="/recruiter/dashboard" element={<Dashboard />} />
+          <Route path="/recruiter/company/create" element={<CreateCompany />} />
+          <Route path="/recruiter/post-job" element={<PostJob />} />
 
 
           {/* Example Protected Route */}
@@ -53,9 +59,7 @@ const AppContent = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="p-6 text-center text-lg">
-                  Welcome to your Dashboard
-                </div>
+                <DashboardRedirect />
               </ProtectedRoute>
             }
           />

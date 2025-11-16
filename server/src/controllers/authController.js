@@ -3,6 +3,8 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
 
+import jwt from "jsonwebtoken";
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -18,8 +20,16 @@ export const registerUser = async (req, res) => {
 
     const newUser = await User.create({ name, email, passwordHash, role: role || "student" });
 
+    // Generate JWT
+    const accessToken = jwt.sign(
+      { id: newUser.id, email: newUser.email, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
     res.status(201).json({
       message: "User registered successfully",
+      accessToken,
       user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
     });
   } catch (err) {

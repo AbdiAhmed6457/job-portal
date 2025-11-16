@@ -4,31 +4,34 @@ import {
   createJob,
   updateJob,
   getJobs,
-getJobById,
-getMyJobs,
-    deleteJob
+  getJobById,
+  getMyJobs,
+  deleteJob
 } from "../controllers/jobController.js";
 
 const router = express.Router();
 
-
-
-// Recruiter gets their own jobs
+// Recruiter: Get their own jobs
 router.get(
-    "/myJobs",
-    authenticate,
-    authorizeRoles("recruiter", "admin"),
-    getMyJobs
+  "/myJobs",
+  authenticate,
+  authorizeRoles("recruiter", "admin"),
+  getMyJobs
 );
 
-router.delete("/:id", authenticate, authorizeRoles("admin", "recruiter"), deleteJob);
+// Recruiter/Admin: delete job
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles("admin", "recruiter"),
+  deleteJob
+);
 
-
-// Recruiter routes
+// Recruiter: create + update
 router.post("/", authenticate, createJob);
 router.put("/:id", authenticate, updateJob);
 
-// Public route to get jobs (with pagination + filters)
+// Public
 router.get("/", getJobs);
 router.get("/:id", getJobById);
 

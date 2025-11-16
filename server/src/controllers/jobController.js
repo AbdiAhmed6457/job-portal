@@ -3,12 +3,16 @@ import Job from "../models/Job.js";
 import Company from "../models/Company.js";
 import AuditLog from "../models/AuditLog.js";
 
-/* =========================
+/* ====================================
    Recruiter: Create Job
-========================= */
+==================================== */
 export const createJob = async (req, res) => {
   try {
     const { title, description, requirements, gpaMin, location, salary, jobType, category, expiresAt } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({ message: "Title and description are required" });
+    }
 
     const company = await Company.findOne({ where: { recruiterUserId: req.user.id } });
     if (!company) return res.status(404).json({ message: "Company not found" });
@@ -21,7 +25,7 @@ export const createJob = async (req, res) => {
       requirements,
       gpaMin,
       location,
-      salary, // handle text or numeric
+      salary,
       jobType,
       category,
       expiresAt,
@@ -36,9 +40,10 @@ export const createJob = async (req, res) => {
   }
 };
 
-/* =========================
+
+/* ====================================
    Recruiter: Update Job
-========================= */
+==================================== */
 export const updateJob = async (req, res) => {
   try {
     const { id } = req.params;
@@ -46,12 +51,25 @@ export const updateJob = async (req, res) => {
 
     const job = await Job.findOne({ where: { id }, include: Company });
     if (!job) return res.status(404).json({ message: "Job not found" });
-    if (job.Company.recruiterUserId !== req.user.id)
+    if (job.Company.recruiterUserId !== req.user.id && req.user.role !== "admin")
       return res.status(403).json({ message: "Unauthorized" });
 
-    await job.update({ title, description, requirements, gpaMin, location, salary, jobType, category, expiresAt, status: "pending" });
+    const newStatus = req.user.role === "admin" ? job.status : "pending";
 
-    res.json({ message: "Job updated and pending approval", job });
+    await job.update({
+      title,
+      description,
+      requirements,
+      gpaMin,
+      location,
+      salary,
+      jobType,
+      category,
+      expiresAt,
+      status: newStatus,
+    });
+
+    res.json({ message: "Job updated", job });
   } catch (err) {
     console.error("❌ updateJob error:", err);
     res.status(500).json({ message: "Server error" });
@@ -59,11 +77,9 @@ export const updateJob = async (req, res) => {
 };
 
 
-/* =========================
-   Public: Get Jobs with filters (Fully Backend-Handled)
-========================= */
-
-
+/* ====================================
+   Public: Get Jobs (Filters + Pagination)
+==================================== */
 export const getJobs = async (req, res) => {
   try {
     const {
@@ -95,16 +111,16 @@ export const getJobs = async (req, res) => {
     if (gpa) filters.gpaMin = { [Op.gte]: parseFloat(gpa) };
     if (jobType) filters.jobType = jobType;
     if (category) filters.category = category;
+
     if (salary && !isNaN(parseFloat(salary))) {
       filters.salary = { [Op.gte]: parseFloat(salary) };
     }
 
-    // Search in title, description, and company name
     if (search) {
       filters[Op.or] = [
         { title: { [Op.like]: `%${search}%` } },
         { description: { [Op.like]: `%${search}%` } },
-        { "$Company.name$": { [Op.like]: `%${search}%` } }, // ✅ this line fixes the issue
+        { "$Company.name$": { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -116,7 +132,6 @@ export const getJobs = async (req, res) => {
         {
           model: Company,
           attributes: ["id", "name", "logoUrl"],
-          required: false, // ✅ keeps LEFT JOIN so company always appears
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -137,46 +152,40 @@ export const getJobs = async (req, res) => {
 };
 
 
-/* =========================
-   Public: Get job by ID
-========================= */
+/* ====================================
+   Public: Get Job by ID
+==================================== */
 export const getJobById = async (req, res) => {
   try {
     const job = await Job.findByPk(req.params.id, {
       include: [{ model: Company }],
     });
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.status(200).json({ job });
+    res.json({ job });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-/* =========================
+
+/* ====================================
    Recruiter: Get My Jobs
-========================= */
+==================================== */
 export const getMyJobs = async (req, res) => {
   try {
     const company = await Company.findOne({
       where: { recruiterUserId: req.user.id },
     });
 
-    if (!company) {
-      return res.status(404).json({ message: "You don't have a company yet" });
-    }
+    if (!company) return res.status(404).json({ message: "You don't have a company yet" });
 
     const jobs = await Job.findAll({
       where: { companyId: company.id },
-      include: [
-        {
-          model: Company,
-          attributes: ["id", "name", "logoUrl", "status"],
-        },
-      ],
+      include: [{ model: Company, attributes: ["id", "name", "logoUrl", "status"] }],
       order: [["createdAt", "DESC"]],
     });
 
-    res.status(200).json({ count: jobs.length, jobs });
+    res.json({ count: jobs.length, jobs });
   } catch (err) {
     console.error("❌ getMyJobs error:", err);
     res.status(500).json({ message: "Server error" });
@@ -184,46 +193,31 @@ export const getMyJobs = async (req, res) => {
 };
 
 
-
-/**
- * Delete a job (soft delete) with audit logging
- * Only admin or the recruiter who owns the job can delete it
- */
+/* ====================================
+   Delete Job (Soft Delete + Audit)
+==================================== */
 export const deleteJob = async (req, res) => {
   try {
-    const jobId = parseInt(req.params.id, 10);
-    if (isNaN(jobId)) {
-      return res.status(400).json({ message: "Invalid job ID" });
-    }
+    const job = await Job.findByPk(req.params.id, { include: Company });
+    if (!job) return res.status(404).json({ message: "Job not found" });
 
-    // Find job with company info
-    const job = await Job.findByPk(jobId, { include: Company });
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
+    if (req.user.role === "recruiter" && job.Company.recruiterUserId !== req.user.id)
+      return res.status(403).json({ message: "Unauthorized" });
 
-    // Access control
-    if (req.user.role === "recruiter" && job.Company.recruiterUserId !== req.user.id) {
-      return res.status(403).json({ message: "Unauthorized to delete this job" });
-    }
-
-    // Soft delete
     await job.update({ status: "deleted" });
 
-    // Audit log (optional but professional)
     await AuditLog.create({
       action: "delete",
       entity: "job",
       entityId: job.id,
       performedBy: req.user.id,
       performedAt: new Date(),
-      details: `Job "${job.title}" deleted by ${req.user.role}`
+      details: `Job "${job.title}" deleted by ${req.user.role}`,
     });
 
-    return res.status(200).json({ message: "Job deleted successfully" });
+    res.json({ message: "Job deleted successfully" });
   } catch (err) {
     console.error("❌ deleteJob error:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
-
