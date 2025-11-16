@@ -1,12 +1,12 @@
 import express from "express";
 import path from "path";
 import StudentProfile from "../models/StudentProfile.js";
-import { upload } from "../middlewares/upload.js";
+import { uploadCv } from "../middlewares/uploadCv.js";
 
 const router = express.Router();
 
 // Upload CV
-router.post("/upload-cv", upload.single("cv"), async (req, res) => {
+router.post("/upload-cv", uploadCv.single("cv"), async (req, res) => {
   try {
     const { userId } = req.body; // get userId from request body or auth middleware
     const profile = await StudentProfile.findOne({ where: { userId } });

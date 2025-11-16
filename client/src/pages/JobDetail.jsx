@@ -11,11 +11,29 @@ import {
   FaBriefcase,
   FaTag,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 
 const JobDetail = () => {
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleApplyClick = () => {
+  if (!user) {
+    navigate("/login");
+    return;
+  }
+  if (user.role !== "student") {
+    alert("Only students can apply for jobs.");
+    return;
+  }
+  navigate(`/job/${id}/apply`);
+};
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -131,13 +149,14 @@ const JobDetail = () => {
 
         {/* Apply Button */}
         <div className="text-center mt-8">
-          <a
-            href="/login"
+        <button
+            onClick={handleApplyClick}
             className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-lg shadow transition-colors"
-          >
+        >
             Apply Now
-          </a>
+        </button>
         </div>
+
       </div>
     </div>
   );

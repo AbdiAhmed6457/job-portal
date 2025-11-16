@@ -11,6 +11,7 @@ import companyRoutes from "./routes/companyRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import path from "path";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use("/api/company", companyRoutes);
 app.use("/api/job", jobRoutes);
 app.use("/api/application", applicationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Test route
 app.get("/", (req, res) => res.send("Server is running 🚀"));

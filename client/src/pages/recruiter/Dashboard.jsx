@@ -19,19 +19,19 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Company info
+        // Fetch company info
         const companyRes = await axios.get("/api/company/mine", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCompany(companyRes.data.company || null);
 
-        // Jobs
+        // Fetch recruiter jobs
         const jobsRes = await axios.get("/api/job/myJobs", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setJobs(jobsRes.data.jobs || []);
 
-        // Applications (latest 5)
+        // Fetch recruiter applications (latest 5)
         const appsRes = await axios.get("/api/application/myApplications", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -49,7 +49,7 @@ const Dashboard = () => {
   if (loading)
     return <div className="text-center mt-20 text-gray-500">Loading...</div>;
 
-  // Stats cards configuration
+  // Stats Cards Config
   const stats = [
     { title: "Total Jobs", value: jobs.length, color: "blue", onClick: () => navigate("/recruiter/jobs") },
     { title: "Approved Jobs", value: jobs.filter(j => j.status === "approved").length, color: "green", onClick: () => navigate("/recruiter/jobs?status=approved") },
@@ -59,9 +59,24 @@ const Dashboard = () => {
     { title: "New Applications", value: applications.filter(a => a.status === "new").length, color: "pink", onClick: () => navigate("/recruiter/applications?status=new") },
   ];
 
+  // Quick Actions Buttons Config
+  const actions = [
+    { label: "Post New Job", color: "blue", route: "/recruiter/post-job" },
+    { label: "View All Jobs", color: "gray", route: "/recruiter/jobs" },
+    company ? { label: "Edit Company", color: "green", route: "/recruiter/company" } : null,
+    { label: "View Applications", color: "purple", route: "/recruiter/applications" },
+  ].filter(Boolean);
+
+  const buttonColors = {
+    blue: "bg-blue-600 hover:bg-blue-700 text-white",
+    gray: "bg-gray-200 hover:bg-gray-300 text-gray-800",
+    green: "bg-green-500 hover:bg-green-600 text-white",
+    purple: "bg-purple-500 hover:bg-purple-600 text-white",
+  };
+
   return (
-    <div className="p-6 space-y-8">
-      {/* Top Greeting & Company */}
+    <div className="p-6 space-y-10">
+      {/* Greeting & Company */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome back, {company?.name || "Recruiter"}!
@@ -79,7 +94,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {stats.map((s, idx) => (
           <StatsCard
             key={idx}
@@ -93,32 +108,15 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
-        <button
-          onClick={() => navigate("/recruiter/post-job")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg transition"
-        >
-          Post New Job
-        </button>
-        <button
-          onClick={() => navigate("/recruiter/jobs")}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-3 rounded-lg transition"
-        >
-          View All Jobs
-        </button>
-        {company && (
+        {actions.map((btn, idx) => (
           <button
-            onClick={() => navigate("/recruiter/company")}
-            className="bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-lg transition"
+            key={idx}
+            onClick={() => navigate(btn.route)}
+            className={`px-5 py-3 rounded-lg transition ${buttonColors[btn.color]}`}
           >
-            Edit Company
+            {btn.label}
           </button>
-        )}
-        <button
-          onClick={() => navigate("/recruiter/applications")}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-3 rounded-lg transition"
-        >
-          View Applications
-        </button>
+        ))}
       </div>
 
       {/* Recent Jobs Preview */}
@@ -128,15 +126,13 @@ const Dashboard = () => {
           <p className="text-gray-500">No jobs posted yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {jobs.slice(0, 6).map(job => (
-              <JobCard key={job.id} job={job} />
-            ))}
+            {jobs.slice(0, 6).map(job => <JobCard key={job.id} job={job} />)}
           </div>
         )}
         {jobs.length > 6 && (
           <button
             onClick={() => navigate("/recruiter/jobs")}
-            className="mt-4 text-blue-600 hover:underline"
+            className="mt-4 inline-block text-blue-600 hover:underline"
           >
             View All Jobs
           </button>
@@ -156,15 +152,11 @@ const Dashboard = () => {
                   <p className="font-semibold">{app.candidateName}</p>
                   <p className="text-sm text-gray-500">{app.jobTitle}</p>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded text-white ${
-                    app.status === "new"
-                      ? "bg-green-500"
-                      : app.status === "reviewed"
-                      ? "bg-blue-500"
-                      : "bg-gray-400"
-                  }`}
-                >
+                <span className={`px-2 py-1 rounded text-white ${
+                  app.status === "new" ? "bg-green-500" :
+                  app.status === "reviewed" ? "bg-blue-500" :
+                  "bg-gray-400"
+                }`}>
                   {app.status}
                 </span>
               </div>
@@ -172,7 +164,7 @@ const Dashboard = () => {
             {applications.length > 5 && (
               <button
                 onClick={() => navigate("/recruiter/applications")}
-                className="mt-2 text-blue-600 hover:underline"
+                className="mt-2 inline-block text-blue-600 hover:underline"
               >
                 View All Applications
               </button>

@@ -15,6 +15,11 @@ import PostJob from "./pages/recruiter/PostJob";
 // Components
 import Navbar from "./component/Navbar";
 import Footer from "./component/Footer";
+import JobsList from "./pages/recruiter/JobsList";
+import ApplyJob from "./pages/recruiter/ApplicationList";
+import ApplicationsList from "./pages/student/ApplyJob";
+
+
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -44,7 +49,11 @@ const AppContent = () => {
       {/* Main Content */}
       <main className="flex-grow pt-20">
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes */} 
+          <Route path="/job/:jobId/apply" element={<ApplyJob />} />
+          <Route path="/recruiter/applications" element={<ApplicationsList />} />
+          <Route path="/admin/applications" element={<ApplicationsList />} />
+
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -52,6 +61,9 @@ const AppContent = () => {
           <Route path="/recruiter/dashboard" element={<Dashboard />} />
           <Route path="/recruiter/create-company" element={<CreateCompany />} />
           <Route path="/recruiter/post-job" element={<PostJob />} />
+          <Route path="/recruiter/jobs" element={<JobsList />} />
+     
+
 
 
           {/* Example Protected Route */}

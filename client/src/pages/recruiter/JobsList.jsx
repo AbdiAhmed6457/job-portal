@@ -12,12 +12,13 @@ const JobsList = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // read status from query string if any
+  // Get status filter from query string
   useEffect(() => {
-    const statusFromQuery = searchParams.get("status");
-    if (statusFromQuery) setStatusFilter(statusFromQuery);
+    const statusFromQuery = searchParams.get("status") || "all";
+    setStatusFilter(statusFromQuery);
   }, [searchParams]);
 
+  // Fetch jobs whenever token or filter changes
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
@@ -42,21 +43,29 @@ const JobsList = () => {
     fetchJobs();
   }, [token, statusFilter]);
 
-  if (loading) return <p className="text-center mt-10 text-gray-500">Loading jobs...</p>;
+  if (loading)
+    return <p className="text-center mt-10 text-gray-500">Loading jobs...</p>;
+
+  const statusColors = {
+    approved: "bg-green-500",
+    pending: "bg-yellow-500",
+    expired: "bg-red-500",
+    rejected: "bg-gray-400",
+  };
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">My Jobs</h1>
+      <h1 className="text-2xl font-bold mb-4">My Jobs</h1>
 
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* --- Filter Buttons --- */}
+      <div className="flex flex-wrap gap-2 mb-6">
         {["all", "approved", "pending", "expired"].map(status => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg transition ${
+            className={`px-4 py-2 rounded-lg transition font-medium ${
               statusFilter === status
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-white shadow"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
           >
@@ -65,14 +74,14 @@ const JobsList = () => {
         ))}
       </div>
 
-      {/* Jobs Table/List */}
+      {/* --- Jobs Table --- */}
       {jobs.length === 0 ? (
-        <p className="text-gray-500">No jobs found.</p>
+        <p className="text-gray-500">No jobs found for "{statusFilter}"</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
+            <thead className="bg-gray-100">
+              <tr>
                 <th className="border px-4 py-2 text-left">Title</th>
                 <th className="border px-4 py-2 text-left">Category</th>
                 <th className="border px-4 py-2 text-left">Type</th>
@@ -87,19 +96,13 @@ const JobsList = () => {
                   <td className="border px-4 py-2">{job.title}</td>
                   <td className="border px-4 py-2">{job.category}</td>
                   <td className="border px-4 py-2">{job.jobType}</td>
-                  <td className="border px-4 py-2 capitalize">
+                  <td className="border px-4 py-2">
                     <span
                       className={`px-2 py-1 rounded text-white ${
-                        job.status === "approved"
-                          ? "bg-green-500"
-                          : job.status === "pending"
-                          ? "bg-yellow-500"
-                          : job.status === "expired"
-                          ? "bg-red-500"
-                          : "bg-gray-400"
+                        statusColors[job.status] || "bg-gray-400"
                       }`}
                     >
-                      {job.status}
+                      {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                     </span>
                   </td>
                   <td className="border px-4 py-2">
@@ -113,13 +116,13 @@ const JobsList = () => {
                   <td className="border px-4 py-2 flex gap-2">
                     <button
                       onClick={() => navigate(`/recruiter/edit-job/${job.id}`)}
-                      className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                      className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition"
                     >
                       Edit
                     </button>
                     <button
-                      // implement delete later
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      // Delete functionality can be implemented later
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                     >
                       Delete
                     </button>

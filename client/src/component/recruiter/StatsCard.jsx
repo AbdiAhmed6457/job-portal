@@ -1,3 +1,4 @@
+// src/components/recruiter/StatsCard.jsx
 import React from "react";
 
 const StatsCard = ({ title, value, color = "blue", onClick }) => {
@@ -12,8 +13,9 @@ const StatsCard = ({ title, value, color = "blue", onClick }) => {
 
   return (
     <div
-      onClick={onClick} // <--- Add this
-      className={`cursor-pointer p-4 rounded-lg shadow flex flex-col items-center justify-center ${colorClasses[color] || "bg-gray-100 text-gray-800"} hover:scale-105 transition`}
+      onClick={onClick}
+      className={`cursor-pointer p-5 rounded-lg shadow flex flex-col items-center justify-center ${colorClasses[color] || "bg-gray-100 text-gray-800"} 
+        hover:scale-105 hover:shadow-lg transition-transform duration-200`}
     >
       <p className="text-sm font-medium">{title}</p>
       <p className="text-2xl font-bold mt-1">{value}</p>
