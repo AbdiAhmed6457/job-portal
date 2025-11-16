@@ -12,14 +12,15 @@ import CreateCompany from "./pages/recruiter/CreateCompany";
 import Dashboard from "./pages/recruiter/Dashboard";
 import DashboardRedirect from "./component/DashboardRedirect";
 import PostJob from "./pages/recruiter/PostJob";
+import JobsList from "./pages/recruiter/JobsList";
+
+// Correct Pages
+import ApplyJob from "./pages/student/ApplyJob"; // Student application form
+import ApplicationsList from "./pages/recruiter/ApplicationList"; // Recruiter/Admin applications list
+
 // Components
 import Navbar from "./component/Navbar";
 import Footer from "./component/Footer";
-import JobsList from "./pages/recruiter/JobsList";
-import ApplyJob from "./pages/recruiter/ApplicationList";
-import ApplicationsList from "./pages/student/ApplyJob";
-
-
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -49,22 +50,73 @@ const AppContent = () => {
       {/* Main Content */}
       <main className="flex-grow pt-20">
         <Routes>
-          {/* Public Routes */} 
-          <Route path="/job/:jobId/apply" element={<ApplyJob />} />
-          <Route path="/recruiter/applications" element={<ApplicationsList />} />
-          <Route path="/admin/applications" element={<ApplicationsList />} />
+          {/* Student Apply Form */}
+          <Route
+            path="/job/:jobId/apply"
+            element={
+              <ProtectedRoute>
+                <ApplyJob />
+              </ProtectedRoute>
+            }
+          />
 
+          {/* Applications List (recruiter/admin) */}
+          <Route
+            path="/recruiter/applications"
+            element={
+              <ProtectedRoute>
+                <ApplicationsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/applications"
+            element={
+              <ProtectedRoute>
+                <ApplicationsList />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/job/:id" element={<JobDetail />} />
-          <Route path="/recruiter/dashboard" element={<Dashboard />} />
-          <Route path="/recruiter/create-company" element={<CreateCompany />} />
-          <Route path="/recruiter/post-job" element={<PostJob />} />
-          <Route path="/recruiter/jobs" element={<JobsList />} />
-     
 
-
+          {/* Recruiter Routes */}
+          <Route
+            path="/recruiter/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recruiter/create-company"
+            element={
+              <ProtectedRoute>
+                <CreateCompany />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recruiter/post-job"
+            element={
+              <ProtectedRoute>
+                <PostJob />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recruiter/jobs"
+            element={
+              <ProtectedRoute>
+                <JobsList />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Example Protected Route */}
           <Route

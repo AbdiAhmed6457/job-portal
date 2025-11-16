@@ -1,6 +1,7 @@
 // client/src/pages/JobDetail.jsx
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import {
   FaMapMarkerAlt,
   FaBuilding,
@@ -11,10 +12,6 @@ import {
   FaBriefcase,
   FaTag,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -24,16 +21,16 @@ const JobDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const handleApplyClick = () => {
-  if (!user) {
-    navigate("/login");
-    return;
-  }
-  if (user.role !== "student") {
-    alert("Only students can apply for jobs.");
-    return;
-  }
-  navigate(`/job/${id}/apply`);
-};
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (user.role !== "student") {
+      alert("Only students can apply for jobs.");
+      return;
+    }
+    navigate(`/job/${id}/apply`);
+  };
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -68,7 +65,7 @@ const JobDetail = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="bg-white shadow-xl border border-gray-200 rounded-2xl p-8 max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Job Header */}
         <div className="flex flex-col md:flex-row md:items-center gap-6 mb-6">
           {job.Company?.logoUrl ? (
             <img
@@ -149,14 +146,13 @@ const JobDetail = () => {
 
         {/* Apply Button */}
         <div className="text-center mt-8">
-        <button
+          <button
             onClick={handleApplyClick}
             className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-lg shadow transition-colors"
-        >
+          >
             Apply Now
-        </button>
+          </button>
         </div>
-
       </div>
     </div>
   );
