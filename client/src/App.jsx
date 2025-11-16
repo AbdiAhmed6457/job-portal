@@ -13,10 +13,9 @@ import Dashboard from "./pages/recruiter/Dashboard";
 import DashboardRedirect from "./component/DashboardRedirect";
 import PostJob from "./pages/recruiter/PostJob";
 import JobsList from "./pages/recruiter/JobsList";
-
-// Correct Pages
-import ApplyJob from "./pages/student/ApplyJob"; // Student application form
+import ApplyJob from "./pages/student/ApplyJob"; 
 import ApplicationsList from "./pages/recruiter/ApplicationList"; // Recruiter/Admin applications list
+import StudentDashboard from "./pages/student/Dashboard"; 
 
 // Components
 import Navbar from "./component/Navbar";
@@ -114,6 +113,15 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <JobsList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/dashboard"
+            element={
+              <ProtectedRoute>
+                <StudentDashboard />
               </ProtectedRoute>
             }
           />

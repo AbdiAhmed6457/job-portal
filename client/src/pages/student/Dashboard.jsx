@@ -1,7 +1,7 @@
 // client/src/pages/student/StudentDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
-import StatCard from "../../components/ui/StatCard";
-import ApplicationCard from "../../components/ui/ApplicationCard";
+import StatCard from "../../component/student/StatCard";
+import ApplicationCard from "../../component/student/ApplicationCard";
 import { AuthContext } from "../../context/AuthContext";
 import { FaClipboardList, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
