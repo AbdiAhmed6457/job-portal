@@ -1,52 +1,65 @@
 // src/pages/recruiter/Dashboard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../../context/AuthContext";
+
 import JobCard from "../../component/recruiter/JobCard";
 import CompanyCard from "../../component/recruiter/CompanyCard";
 import StatsCard from "../../component/recruiter/StatsCard";
 
 const Dashboard = () => {
+  const { user, token } = useContext(AuthContext);
   const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("token");
-
         // Fetch company info
         const companyRes = await axios.get("/api/company/mine", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setCompany(companyRes.data.company);
+        setCompany(companyRes.data.company || null);
 
-        // Fetch jobs
+        // Fetch recruiter jobs
         const jobsRes = await axios.get("/api/job/myJobs", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setJobs(jobsRes.data.jobs || []);
 
-        // Fetch latest applications (optional: limit 5-10)
+        // Fetch recruiter applications (latest 5)
         const appsRes = await axios.get("/api/application/myApplications", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setApplications(appsRes.data.applications || []);
       } catch (err) {
-        console.error("DASHBOARD FETCH ERROR:", err.response?.data || err.message);
+        console.error("Dashboard fetch error:", err.response?.data || err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchDashboardData();
+  }, [token]);
 
   if (loading)
     return (
       <div className="text-center mt-20 text-gray-500">Loading...</div>
     );
+
+  // Stats cards data
+  const stats = [
+    { title: "Total Jobs", value: jobs.length, color: "blue", link: "/recruiter/jobs" },
+    { title: "Approved Jobs", value: jobs.filter(j => j.status === "approved").length, color: "green", link: "/recruiter/jobs?status=approved" },
+    { title: "Pending Jobs", value: jobs.filter(j => j.status === "pending").length, color: "yellow", link: "/recruiter/jobs?status=pending" },
+    { title: "Expired Jobs", value: jobs.filter(j => j.status === "expired").length, color: "red", link: "/recruiter/jobs?status=expired" },
+    { title: "Total Applications", value: applications.length, color: "purple", link: "/recruiter/applications" },
+    { title: "New Applications", value: applications.filter(a => a.status === "new").length, color: "pink", link: "/recruiter/applications?status=new" },
+  ];
 
   return (
     <div className="p-6 space-y-8">

@@ -39,7 +39,7 @@ const Register = () => {
       // ✅ Proper redirect after registration
       if (formData.role === "recruiter") {
         // New recruiters always go to company creation page
-        navigate("/recruiter/company/create");
+        navigate("/recruiter/company/create-company");
       } else {
         // Students go to homepage/dashboard
         navigate("/");

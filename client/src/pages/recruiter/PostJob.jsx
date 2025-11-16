@@ -1,12 +1,9 @@
-// src/pages/recruiter/PostJob.jsx
-import { useState, useContext } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
-import { Input } from "../../components/ui/Input.jsx";
-import { Button } from "../../components/ui/Button.jsx";
+import { Textarea } from "@/components/ui/Textarea"; // shadcn or custom
 
-const PostJob = () => {
-  const { token } = useContext(AuthContext);
+const JobForm = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -16,152 +13,149 @@ const PostJob = () => {
     gpaMin: "",
     location: "",
     salary: "",
-    jobType: "full-time",
     category: "",
+    jobType: "",
     expiresAt: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const handleChange = (e) =>
+  // Update form fields
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
+
+    // Convert requirements string to array
+    const requirementsArray = formData.requirements
+      .split(/[\s,]+/)       // split by comma or space
+      .map((r) => r.trim())
+      .filter((r) => r);     // remove empty strings
 
     try {
-      const res = await fetch("http://localhost:5000/api/job", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const token = localStorage.getItem("token");
+
+      // Send array to backend; backend will stringify it
+      await axios.post(
+        "http://localhost:5000/api/job",
+        {
+          ...formData,
+          requirements: requirementsArray, 
         },
-        body: JSON.stringify(formData),
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setSuccess("Job created successfully and pending approval!");
-      setFormData({
-        title: "",
-        description: "",
-        requirements: "",
-        gpaMin: "",
-        location: "",
-        salary: "",
-        jobType: "full-time",
-        category: "",
-        expiresAt: "",
-      });
-
-      // Redirect after short delay
-      setTimeout(() => navigate("/recruiter/jobs"), 1500);
-    } catch (err) {
-      setError(err.message || "Failed to create job");
-    } finally {
-      setLoading(false);
+      navigate("/recruiter/dashboard"); // redirect after success
+    } catch (error) {
+      console.error("Error creating job:", error);
+      alert("Failed to create job. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-500 p-4">
-      <div className="w-full max-w-2xl bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Post a New Job
-        </h2>
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg mx-auto p-4">
+      <input
+        type="text"
+        name="title"
+        placeholder="Job Title"
+        value={formData.title}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+        required
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded mb-4 animate-pulse">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded mb-4 animate-pulse">
-            {success}
-          </div>
-        )}
+      <Textarea
+        label="Job Description"
+        name="description"
+        placeholder="Describe the job..."
+        value={formData.description}
+        onChange={(e) =>
+          handleChange({ target: { name: "description", value: e.target.value } })
+        }
+      />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            name="title"
-            placeholder="Job Title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            name="description"
-            placeholder="Job Description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            name="requirements"
-            placeholder="Requirements"
-            value={formData.requirements}
-            onChange={handleChange}
-          />
-          <Input
-            name="gpaMin"
-            placeholder="Minimum GPA (optional)"
-            type="number"
-            value={formData.gpaMin}
-            onChange={handleChange}
-          />
-          <Input
-            name="location"
-            placeholder="Location"
-            value={formData.location}
-            onChange={handleChange}
-          />
-          <Input
-            name="salary"
-            placeholder="Salary"
-            value={formData.salary}
-            onChange={handleChange}
-          />
-          <select
-            name="jobType"
-            value={formData.jobType}
-            onChange={handleChange}
-            className="w-full h-11 border-2 border-gray-200 rounded-lg px-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
-          >
-            <option value="full-time">Full-time</option>
-            <option value="part-time">Part-time</option>
-            <option value="internship">Internship</option>
-          </select>
-          <Input
-            name="category"
-            placeholder="Category (e.g., IT, Marketing)"
-            value={formData.category}
-            onChange={handleChange}
-          />
-          <Input
-            name="expiresAt"
-            type="date"
-            placeholder="Application Deadline"
-            value={formData.expiresAt}
-            onChange={handleChange}
-          />
+      <Textarea
+        label="Requirements (comma or space separated)"
+        name="requirements"
+        placeholder="React, Node, Express"
+        value={formData.requirements}
+        onChange={(e) =>
+          handleChange({ target: { name: "requirements", value: e.target.value } })
+        }
+      />
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all"
-          >
-            {loading ? "Posting Job..." : "Post Job"}
-          </Button>
-        </form>
-      </div>
-    </div>
+      <input
+        type="number"
+        name="gpaMin"
+        placeholder="Minimum GPA"
+        value={formData.gpaMin}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      />
+
+      <input
+        type="text"
+        name="location"
+        placeholder="Location"
+        value={formData.location}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      />
+
+      <input
+        type="number"
+        name="salary"
+        placeholder="Salary"
+        value={formData.salary}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      />
+
+      <select
+        name="category"
+        value={formData.category}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      >
+        <option value="">Select Category</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Marketing">Marketing</option>
+        <option value="Design">Design</option>
+      </select>
+
+      <select
+        name="jobType"
+        value={formData.jobType}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      >
+        <option value="">Select Job Type</option>
+        <option value="fulltime">Full Time</option>
+        <option value="parttime">Part Time</option>
+        <option value="internship">Internship</option>
+      </select>
+
+      <input
+        type="date"
+        name="expiresAt"
+        value={formData.expiresAt}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
+      />
+
+      <button
+        type="submit"
+        className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600"
+      >
+        Create Job
+      </button>
+    </form>
   );
 };
 
-export default PostJob;
+export default JobForm;

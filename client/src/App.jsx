@@ -50,7 +50,7 @@ const AppContent = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/recruiter/dashboard" element={<Dashboard />} />
-          <Route path="/recruiter/company/create" element={<CreateCompany />} />
+          <Route path="/recruiter/create-company" element={<CreateCompany />} />
           <Route path="/recruiter/post-job" element={<PostJob />} />
 
 

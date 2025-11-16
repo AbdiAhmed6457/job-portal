@@ -6,40 +6,53 @@ import AuditLog from "../models/AuditLog.js";
 /* ====================================
    Recruiter: Create Job
 ==================================== */
+
 export const createJob = async (req, res) => {
   try {
-    const { title, description, requirements, gpaMin, location, salary, jobType, category, expiresAt } = req.body;
-
-    if (!title || !description) {
-      return res.status(400).json({ message: "Title and description are required" });
-    }
-
-    const company = await Company.findOne({ where: { recruiterUserId: req.user.id } });
-    if (!company) return res.status(404).json({ message: "Company not found" });
-    if (company.status !== "approved")
-      return res.status(403).json({ message: "Company is not approved to post jobs" });
-
-    const job = await Job.create({
+    const {
       title,
       description,
-      requirements,
+      requirements, // frontend sends array
       gpaMin,
       location,
       salary,
-      jobType,
       category,
+      jobType,
       expiresAt,
-      companyId: company.id,
+    } = req.body;
+
+    // 1️⃣ Find the company for the logged-in recruiter
+    // Assuming req.user.id is the recruiter/user ID
+    const company = await Company.findOne({ where: { recruiterUserId: req.user.id } });
+
+    if (!company) {
+      return res.status(400).json({ message: "Company not found for this recruiter." });
+    }
+
+    // 2️⃣ Convert requirements array to JSON string
+    const requirementsString = JSON.stringify(requirements);
+
+    // 3️⃣ Create the job
+    const job = await Job.create({
+      title,
+      description,
+      requirements: requirementsString, // store as string
+      gpaMin,
+      location,
+      salary,
+      category,
+      jobType,
+      expiresAt,
       status: "pending",
+      companyId: company.id, // assign correct companyId
     });
 
-    res.status(201).json({ message: "Job created and pending approval", job });
-  } catch (err) {
-    console.error("❌ createJob error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(201).json(job);
+  } catch (error) {
+    console.error("createJob error:", error);
+    res.status(500).json({ message: "Failed to create job", error: error.message });
   }
 };
-
 
 /* ====================================
    Recruiter: Update Job
