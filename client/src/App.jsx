@@ -15,7 +15,12 @@ import PostJob from "./pages/recruiter/PostJob";
 import JobsList from "./pages/recruiter/JobsList";
 import ApplyJob from "./pages/student/ApplyJob"; 
 import ApplicationsList from "./pages/recruiter/ApplicationList"; // Recruiter/Admin applications list
-import StudentDashboard from "./pages/student/Dashboard"; 
+import StudentDashboard from "./pages/student/Dashboard";
+import AdminLayout from "./layouts/adminLayout";
+import AdminJobs from "./pages/admin/AdminJobs";
+import AdminCompanies from "./pages/admin/AdminCompanies";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminApplications from "./pages/admin/AdminApplications";
 
 // Components
 import Navbar from "./component/Navbar";
@@ -68,14 +73,7 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/admin/applications"
-            element={
-              <ProtectedRoute>
-                <ApplicationsList />
-              </ProtectedRoute>
-            }
-          />
+         
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -135,6 +133,20 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
+
+
+
+        {/* Admin Route Group */}
+        <Route path="/admin" element={<AdminLayout />}>
+    <Route index element={<Navigate to="dashboard" replace />} />
+    <Route path="dashboard" element={<AdminDashboard />} />
+    <Route path="jobs" element={<AdminJobs />} />
+    <Route path="companies" element={<AdminCompanies />} />
+    <Route path="applications" element={<AdminApplications />} />
+  </Route>
+
+
+
 
           {/* 404 fallback */}
           <Route

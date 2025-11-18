@@ -6,8 +6,17 @@ import {
   updateJobStatus,
   getJobStats,
   getAllApplications,
-  updateApplicationStatus
+  updateApplicationStatus,
+  getAllAdminJobs
 } from "../controllers/adminController.js";
+import {
+  createJob,
+  updateJob,
+  getJobs,
+  getJobById,
+  getMyJobs,
+  deleteJob
+} from "../controllers/jobController.js";
 import { authenticate, authorizeRoles } from "../middlewares/authenticate.js";
 
 const router = express.Router();
@@ -20,6 +29,10 @@ router.put("/companies/:id/status", authenticate, authorizeRoles("admin"), updat
 router.get("/jobs/pending", authenticate, authorizeRoles("admin"), getPendingJobs);
 router.put("/jobs/:id/status", authenticate, authorizeRoles("admin"), updateJobStatus);
 router.get("/jobs/status", authenticate, authorizeRoles("admin"), getJobStats);
+
+router.get("/jobs/all", authenticate, authorizeRoles("admin"), getAllAdminJobs);
+
+router.get("/jobs/:id", authenticate, authorizeRoles("admin"), getJobById);
 
 // Applications
 router.get("/applications", authenticate, authorizeRoles("admin"), getAllApplications);

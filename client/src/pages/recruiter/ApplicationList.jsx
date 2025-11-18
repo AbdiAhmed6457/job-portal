@@ -2,6 +2,12 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 
+const statusColors = {
+  pending: "bg-yellow-500",
+  accepted: "bg-green-600",
+  rejected: "bg-red-600",
+};
+
 const ApplicationsList = () => {
   const { token } = useContext(AuthContext);
 
@@ -10,12 +16,11 @@ const ApplicationsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch applications
   const fetchApps = async () => {
     setLoading(true);
     try {
       const res = await axios.get("/api/application", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setApps(res.data.applications || []);
     } catch (err) {
@@ -29,7 +34,6 @@ const ApplicationsList = () => {
     fetchApps();
   }, []);
 
-  // Update status
   const updateStatus = async (id, status) => {
     try {
       await axios.put(
@@ -43,7 +47,6 @@ const ApplicationsList = () => {
     }
   };
 
-  // Filtering logic
   const filteredApps =
     filter === "all" ? apps : apps.filter((a) => a.status === filter);
 
@@ -52,7 +55,9 @@ const ApplicationsList = () => {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Job Applications</h1>
+        <h1 className="text-3xl font-bold text-gray-900 drop-shadow-sm">
+          Job Applications
+        </h1>
 
         <div className="flex gap-3">
           <select
@@ -79,31 +84,17 @@ const ApplicationsList = () => {
       {loading && <p className="text-gray-600">Loading...</p>}
       {error && <p className="text-red-600 text-lg mb-4">{error}</p>}
 
-      {/* Applications Table */}
       {!loading && !error && (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border">
 
           <table className="min-w-full border-collapse">
             <thead className="bg-gray-50 border-b sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-4 text-left text-gray-600 font-semibold">
-                  Candidate
-                </th>
-                <th className="px-6 py-4 text-left text-gray-600 font-semibold">
-                  Job
-                </th>
-                <th className="px-6 py-4 text-left text-gray-600 font-semibold">
-                  Cover Letter
-                </th>
-                <th className="px-6 py-4 text-left text-gray-600 font-semibold">
-                  CV
-                </th>
-                <th className="px-6 py-4 text-center text-gray-600 font-semibold">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-center text-gray-600 font-semibold">
-                  Actions
-                </th>
+                {["Candidate", "Job", "Cover Letter", "CV", "Status", "Actions"].map((h) => (
+                  <th key={h} className="px-6 py-4 text-left text-gray-600 font-semibold">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
 
@@ -111,11 +102,11 @@ const ApplicationsList = () => {
               {filteredApps.map((app) => (
                 <tr
                   key={app.id}
-                  className="hover:bg-gray-50 border-b transition"
+                  className="hover:bg-gray-100 transition border-b"
                 >
                   {/* Candidate */}
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-800">
+                    <div className="font-semibold text-gray-900">
                       {app.User?.name || "Unknown"}
                     </div>
                     <div className="text-sm text-gray-500">
@@ -125,9 +116,9 @@ const ApplicationsList = () => {
 
                   {/* Job */}
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-800">{app.Job?.title}</div>
+                    <div className="font-medium text-gray-900">{app.Job?.title}</div>
                     <div className="text-sm text-gray-500">
-                      {app.Job?.Company?.name}
+                      {app.Job?.Company?.name || "—"}
                     </div>
                   </td>
 
@@ -157,19 +148,13 @@ const ApplicationsList = () => {
                   {/* Status */}
                   <td className="px-6 py-4 text-center">
                     <span
-                      className={`px-3 py-1 rounded-full text-white text-sm shadow ${
-                        app.status === "pending"
-                          ? "bg-yellow-500"
-                          : app.status === "accepted"
-                          ? "bg-green-600"
-                          : "bg-red-600"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-white text-sm shadow ${statusColors[app.status]}`}
                     >
                       {app.status}
                     </span>
                   </td>
 
-                  {/* Action Buttons */}
+                  {/* Actions */}
                   <td className="px-6 py-4 text-center flex justify-center gap-3">
                     <button
                       onClick={() => updateStatus(app.id, "accepted")}
@@ -189,10 +174,8 @@ const ApplicationsList = () => {
             </tbody>
 
           </table>
-
         </div>
       )}
-
     </div>
   );
 };

@@ -16,6 +16,7 @@ const Job = sequelize.define("Job", {
   jobType: { type: DataTypes.ENUM("onsite", "remote", "fulltime") },
   expiresAt: { type: DataTypes.DATE },
   status: { type: DataTypes.ENUM("pending", "approved", "rejected", "expired") },
+  recruiterUserId: { type: DataTypes.INTEGER, allowNull: false },
 });
 
 

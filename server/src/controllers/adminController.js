@@ -95,7 +95,7 @@ export const getJobStats = async (req, res) => {
     const stats = await Job.findAll({
       attributes: [
         "companyId",
-        [sequelize.fn("COUNT", sequelize.col("id")), "jobCount"],
+        [sequelize.fn("COUNT", sequelize.col("Job.id")), "jobCount"],
       ],
       group: ["companyId"],
       include: [{ model: Company, attributes: ["name"] }],
@@ -144,6 +144,27 @@ export const updateApplicationStatus = async (req, res) => {
     res.json({ message: `Application ${status}`, application });
   } catch (err) {
     console.error("❌ updateApplicationStatus error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// controllers/admin/jobController.js
+export const getAllAdminJobs = async (req, res) => {
+  try {
+    const jobs = await Job.findAll({
+      include: [
+        {
+          model: Company,
+          attributes: ["id", "name", "logoUrl"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json({ jobs });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };

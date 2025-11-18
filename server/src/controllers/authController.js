@@ -22,7 +22,7 @@ export const registerUser = async (req, res) => {
 
     // Generate JWT
     const accessToken = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role },
+      { id: newUser.id, email: newUser.email, role: newUser.role, },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );

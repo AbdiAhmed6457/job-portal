@@ -16,9 +16,16 @@ import path from "path";
 dotenv.config();
 
 const app = express();
+const allowedOrigins = ["http://localhost:5173"]; // frontend URL
+
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true, // <-- allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 

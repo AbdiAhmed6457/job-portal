@@ -44,7 +44,8 @@ export const createJob = async (req, res) => {
       jobType,
       expiresAt,
       status: "pending",
-      companyId: company.id, // assign correct companyId
+      companyId: company.id,
+      recruiterUserId: req.user.id, // assign correct recruiterUserId
     });
 
     res.status(201).json(job);
