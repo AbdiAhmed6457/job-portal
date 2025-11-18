@@ -22,7 +22,7 @@ const Login = () => {
       const data = await login(email, password);
       const role = data.user?.role;
       if (role === "recruiter") navigate("/recruiter/dashboard");
-      else if (role === "admin") navigate("/dashboard/admin");
+      else if (role === "admin") navigate("/admin/dashboard");
       else navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Invalid email or password");

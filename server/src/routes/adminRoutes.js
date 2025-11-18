@@ -7,7 +7,9 @@ import {
   getJobStats,
   getAllApplications,
   updateApplicationStatus,
-  getAllAdminJobs
+  getAllAdminJobs,
+  toggleCompanyBan,
+  getAdminStats
 } from "../controllers/adminController.js";
 import {
   createJob,
@@ -22,6 +24,9 @@ import { authenticate, authorizeRoles } from "../middlewares/authenticate.js";
 const router = express.Router();
 
 // Companies
+router.put("/companies/:id/ban", authenticate, authorizeRoles("admin"), toggleCompanyBan);
+router.get("/stats", authenticate, authorizeRoles("admin"), getAdminStats);
+
 router.get("/companies", authenticate, authorizeRoles("admin"), getAllCompanies);
 router.put("/companies/:id/status", authenticate, authorizeRoles("admin"), updateCompanyStatus);
 

@@ -168,3 +168,48 @@ export const getAllAdminJobs = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// Add these new functions
+
+// Ban/Unban a company (stronger than reject)
+export const toggleCompanyBan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const company = await Company.findByPk(id);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    const newBannedStatus = !company.isBanned;
+    await company.update({ isBanned: newBannedStatus });
+
+    if (newBannedStatus) {
+      await Job.update({ status: "rejected" }, { where: { companyId: id } });
+    }
+
+    res.json({ message: newBannedStatus ? "Company banned" : "Company unbanned", company });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get admin dashboard stats
+export const getAdminStats = async (req, res) => {
+  try {
+    const [totalCompanies, pendingCompanies, totalJobs, pendingJobs, totalApplications] = await Promise.all([
+      Company.count(),
+      Company.count({ where: { status: "pending" } }),
+      Job.count(),
+      Job.count({ where: { status: "pending" } }),
+      Application.count(),
+    ]);
+
+    res.json({
+      totalCompanies,
+      pendingCompanies,
+      totalJobs,
+      pendingJobs,
+      totalApplications,
+      pendingPercentage: totalCompanies > 0 ? Math.round((pendingCompanies / totalCompanies) * 100) : 0,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
